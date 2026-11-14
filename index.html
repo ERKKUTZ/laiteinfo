@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laiteinfo</title>
+<style>
+body {
+  background: #101827;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+  padding: 25px;
+}
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 12px auto;
+  max-width: 400px;
+}
+</style>
+</head>
+<body>
+<h1>📱 Laiteinfo</h1>
+<p>Tämä sivu näyttää selaimesi perustiedot.</p>
+<div class="card" id="info"></div>
+
+<script>
+const info = {
+  "Käyttöjärjestelmä": navigator.platform,
+  "Selain": navigator.userAgent,
+  "Näyttö": screen.width + " × " + screen.height,
+  "Kieli": navigator.language,
+  "Aikavyöhyke":
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  "Avausaika": new Date().toLocaleString()
+};
+
+document.getElementById("info").innerHTML =
+  Object.entries(info).map(([key, value]) =>
+    <p><b>${key}:</b> ${value}</p>
+  ).join("");
+</script>
+</body>
+</html>
