@@ -4,50 +4,122 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Laiteinfo</title>
+
 <style>
 body {
   background: #101827;
   color: white;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   text-align: center;
   padding: 25px;
 }
 .card {
   background: #1e293b;
-  padding: 20px;
+  padding: 24px;
   border-radius: 15px;
-  margin: 12px auto;
+  margin: 20px auto;
   max-width: 450px;
-  overflow-wrap: anywhere;
 }
+button {
+  background: #22c55e;
+  color: #101827;
+  padding: 13px 24px;
+  border: none;
+  border-radius: 9px;
+  font-size: 16px;
+  cursor: pointer;
+}
+p { overflow-wrap: anywhere; }
 </style>
 </head>
-<body>
-<h1>📱 Laiteinfo</h1>
-<p>Tämä sivu näyttää selaimesi perustiedot.</p>
-<div class="card" id="info">Ladataan tietoja...</div>
 
-<script>
-const info = {
-  "Käyttöjärjestelmä": navigator.userAgent,
-  "Selain": navigator.appName,
-  "Näyttö": screen.width + " × " + screen.height,
-  "Kieli": navigator.language,
-  "Aikavyöhyke": Intl.DateTimeFormat()
+<body>
+
+<h1>📱 Laiteinfo</h1>
+
+<div class="card">
+  <h2>Tietosuojailmoitus</h2>
+  <p>
+    Voit halutessasi lähettää selaimesi perustiedot
+    sivuston ylläpitäjälle. Tietoja ovat selain,
+    käyttöjärjestelmän tunnistetiedot, näytön koko,
+    kieli ja aikavyöhyke.
+  </p>
+  <p>
+    Tietoja ei lähetetä ennen hyväksyntääsi.
+    Tiedot tallennetaan Supabase-tietokantaan.
+  </p>
+
+  <button id="consentButton">
+    Hyväksyn tietojen lähettämisen
+  </button>
+
+  <p id="status" aria-live="polite"></p>
+</div>
+
+<div class="card">
+  <h2>Omat laitetietosi</h2>
+  <div id="info">Tietoja ei ole vielä näytetty.</div>
+</div>
+
+<script type="module">
+import { createClient }
+from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// Lisää omat Supabase-tietosi:
+const SUPABASE_URL = "https://qysbgrvfrrneoarqpjjv.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_3hbxDK5b6gq_YlTuvoVmLA_nAAwExMT";
+
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const data = {
+  browser: navigator.userAgent,
+  screen_size: screen.width + " x " + screen.height,
+  language: navigator.language,
+  timezone: Intl.DateTimeFormat()
     .resolvedOptions().timeZone,
-  "Avausaika": new Date().toLocaleString()
+  user_agent: navigator.userAgent
 };
 
-const container = document.getElementById("info");
+const info = document.getElementById("info");
 
-for (const [key, value] of Object.entries(info)) {
+for (const [key, value] of Object.entries(data)) {
   const p = document.createElement("p");
-  const b = document.createElement("b");
-  b.textContent = key + ": ";
-  p.appendChild(b);
-  p.appendChild(document.createTextNode(value));
-  container.appendChild(p);
+  p.textContent = key + ": " + value;
+  info.appendChild(p);
 }
+
+document.getElementById("consentButton")
+.addEventListener("click", async () => {
+
+  const status = document.getElementById("status");
+  const button = document.getElementById("consentButton");
+
+  button.disabled = true;
+  status.textContent = "Tallennetaan...";
+
+  const { error } = await supabase
+    .from("device_visits")
+    .insert({
+      ...data,
+      consent: true
+    });
+
+  if (error) {
+    status.textContent =
+      "Tallennus epäonnistui. Tarkista yhteys ja asetukset.";
+    button.disabled = false;
+    console.error(error);
+  } else {
+    status.textContent =
+      "Kiitos! Tietosi on tallennettu.";
+    button.textContent = "Hyväksytty";
+  }
+});
 </script>
+
 </body>
 </html>
